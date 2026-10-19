@@ -1,0 +1,26 @@
+generator client { provider = "prisma-client-js" }
+datasource db { provider = "postgresql"; url = env("DATABASE_URL") }
+enum Role { CUSTOMER MERCHANT RIDER ADMIN }
+enum OrderStatus { PLACED CONFIRMED PREPARING OUT_FOR_DELIVERY DELIVERED REJECTED }
+enum PaymentMethod { COD GCASH PAYMAYA GRABPAY CARD }
+model User { id String @id @default(cuid()); name String; email String @unique; role Role @default(CUSTOMER)
+  restaurants Restaurant[]; orders Order[] @relation("Customer"); deliveries Order[] @relation("Rider"); location RiderLocation? }
+model Restaurant { id String @id @default(cuid()); ownerId String; owner User @relation(fields: [ownerId], references: [id])
+  name String; image String?; address String; lat Float; lng Float; commissionRate Float @default(0.25); rating Float @default(0)
+  categories Category[]; items MenuItem[]; orders Order[] }
+model Category { id String @id @default(cuid()); name String; restaurantId String; restaurant Restaurant @relation(fields: [restaurantId], references: [id]); items MenuItem[] }
+model MenuItem { id String @id @default(cuid()); restaurantId String; restaurant Restaurant @relation(fields: [restaurantId], references: [id])
+  categoryId String; category Category @relation(fields: [categoryId], references: [id])
+  name String; basePrice Decimal @db.Decimal(10,2); isAvailable Boolean @default(true); image String?
+  modifierGroups ModifierGroup[]; orderItems OrderItem[] }
+model ModifierGroup { id String @id @default(cuid()); menuItemId String; menuItem MenuItem @relation(fields: [menuItemId], references: [id])
+  name String; required Boolean @default(false); maxSelect Int @default(1); options ModifierOption[] }
+model ModifierOption { id String @id @default(cuid()); groupId String; group ModifierGroup @relation(fields: [groupId], references: [id]); name String; price Decimal @db.Decimal(10,2) @default(0) }
+model Order { id String @id @default(cuid()); customerId String; customer User @relation("Customer", fields: [customerId], references: [id])
+  restaurantId String; restaurant Restaurant @relation(fields: [restaurantId], references: [id])
+  riderId String?; rider User? @relation("Rider", fields: [riderId], references: [id])
+  status OrderStatus @default(PLACED); totalAmount Decimal @db.Decimal(10,2); paymentMethod PaymentMethod; deliveryAddress String
+  createdAt DateTime @default(now()); items OrderItem[] }
+model OrderItem { id String @id @default(cuid()); orderId String; order Order @relation(fields: [orderId], references: [id])
+  menuItemId String; menuItem MenuItem @relation(fields: [menuItemId], references: [id]); qty Int; unitPrice Decimal @db.Decimal(10,2); options String[]; note String? }
+model RiderLocation { id String @id @default(cuid()); riderId String @unique; rider User @relation(fields: [riderId], references: [id]); lat Float; lng Float; isAvailable Boolean @default(true) }

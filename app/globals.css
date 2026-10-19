@@ -1,0 +1,5 @@
+@tailwind base; @tailwind components; @tailwind utilities;
+body { @apply bg-paper text-ink; }
+.btn { @apply rounded-full bg-brand px-5 py-2.5 font-bold text-white transition hover:bg-brand-dark disabled:opacity-40; }
+.card { @apply rounded-2xl bg-white shadow-sm ring-1 ring-ink/5; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
